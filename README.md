@@ -1,4 +1,6 @@
 # pychopro
+[![PyPI version](https://badge.fury.io/py/chopro.svg)](https://badge.fury.io/py/chopro)
+
 Utilities for manipulating, converting, and rendering ChoPro/ChordPro text.
 
 ## How It Works
