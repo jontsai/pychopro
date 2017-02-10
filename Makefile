@@ -10,7 +10,7 @@ package:
 repackage: clean package
 
 install:
-	sh -c "sudo pip install dist/chopro-`cat VERSION`.tar.gz"
+	sh -c "sudo pip install -U dist/chopro-`cat VERSION`.tar.gz"
 
 upload:
 	sh -c "twine upload dist/chopro-`cat VERSION`-py2.py3-none-any.whl"
