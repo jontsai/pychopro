@@ -6,7 +6,7 @@ Usage:
     chopro2html <chopro_file>
 
 Example:
-    chopro2html songs/twinkle_twinkle_little_star.chopro > twinkle.html
+    chopro2html twinkle_twinkle_little_star.chopro > twinkle.html
 """
 
 import getopt
