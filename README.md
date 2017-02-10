@@ -4,6 +4,10 @@
 
 Utilities for manipulating, converting, and rendering ChoPro/ChordPro text.
 
+## Author
+
+[Jonathan Tsai (jontsai)](https://github.com/jontsai)
+
 ## How It Works
 
 [ChoPro](https://en.wikipedia.org/wiki/Chord_(software)) aka [ChordPro](http://www.chordpro.org/) is a "[simple text format for the notation of lyrics and chords](http://www.chordii.org/chordpro/index.html)."
@@ -14,3 +18,7 @@ This project contains a script [`chopro2html`](https://github.com/jontsai/pychop
 
 * <http://webchord.sourceforge.net/>
 * <https://pypi.python.org/pypi/pychord>
+
+## License
+
+[MIT](https://github.com/jontsai/pychopro/blob/master/LICENSE)
