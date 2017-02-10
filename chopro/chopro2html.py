@@ -3,10 +3,10 @@
 Convert ChoPro/Chordpro to HTML
 
 Usage:
-    python chopro2html.py <chopro_file>
+    chopro2html <chopro_file>
 
 Example:
-    python chopro2html.py songs/twinkle_twinkle_little_star.chopro > twinkle.html
+    chopro2html songs/twinkle_twinkle_little_star.chopro > twinkle.html
 """
 
 import getopt
@@ -57,7 +57,7 @@ def main(argv=None):
 
 
 def chopro2html(chopro_text):
-    from chopro.chopro import ChoPro
+    from .chopro import ChoPro
     chopro = ChoPro(chopro_text)
     html = chopro.get_html()
     return html
