@@ -57,7 +57,7 @@ def main(argv=None):
 
 
 def chopro2html(chopro_text):
-    from .chopro import ChoPro
+    from chopro.core import ChoPro
     chopro = ChoPro(chopro_text)
     html = chopro.get_html()
     return html

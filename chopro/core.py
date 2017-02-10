@@ -14,7 +14,7 @@ class Re(object):
     def search(self, pattern, text):
         if type(pattern).__name__ == 'SRE_Pattern':
             self.last_match = pattern.search(text)
-        else:        
+        else:
             self.last_match = re.search(pattern, text)
         return self.last_match
 
@@ -24,7 +24,7 @@ class Re(object):
             return repl
         if type(pattern).__name__ == 'SRE_Pattern':
             result, n = pattern.subn(frepl, string, count=count)
-        else:        
+        else:
             result, n = re.subn(pattern, frepl, string, count=count, flags=flags)
         if n == 0:
             self.last_match = None
@@ -66,6 +66,20 @@ class ChoPro(object):
         html_str = '\n'.join(self.html)
         return html_str
 
+    def get_lyrics_html_classes(self):
+        classes = [self.LYRICS_CLASSES[0]]
+        if self.mode > 0:
+            classes.append(self.LYRICS_CLASSES[self.mode])
+        result = ' '.join(classes)
+        return result
+
+    def get_chords_html_classes(self):
+        classes = [self.CHORDS_CLASSES[0]]
+        if self.mode > 0:
+            classes.append(self.CHORDS_CLASSES[self.mode])
+        result = ' '.join(classes)
+        return result
+
     def _sanitize_chopro_line(self, chopro_line):
         sanitized = re.sub(r'<', '&lt;', chopro_line)
         sanitized = re.sub(r'>', '&gt;', sanitized)
@@ -75,7 +89,7 @@ class ChoPro(object):
     def _process_chopro_line(self, chopro_line):
         line = self._sanitize_chopro_line(chopro_line)
         gre, html = self.gre, self.html
-        
+
         if gre.match(self.REGEX_COMMENT_NON_PRINTING, line):
             self._process_chopro_line_comment()
         elif gre.match(self.REGEX_COMMAND, line):
@@ -147,22 +161,22 @@ class ChoPro(object):
             html.append('<br/>')
         elif len(lyrics) == 1 and chords[0] == '':
             # line without chords
-            html.append('<div class="%s">%s</div>' % (self.LYRICS_CLASSES[self.mode], lyrics[0],))
+            html.append('<div class="%s">%s</div>' % (self.get_lyrics_html_classes(), lyrics[0],))
         else:
             # line with lyrics and chords interleaved
             # start table
             html.append('<table cellpadding=0 cellspacing=0>')
 
             # generate chords row
-            html.append('<tr class="%s">' % self.CHORDS_CLASSES[self.mode])
+            html.append('<tr class="%s">' % self.get_chords_html_classes())
             for i in xrange(len(chords)):
-                html.append('<td class="%s">%s</td>' % (self.CHORDS_CLASSES[self.mode], chords[i],))
+                html.append('<td class="%s">%s</td>' % (self.get_chords_html_classes(), chords[i],))
             html.append('</tr>')
 
             # generate lyrics row
-            html.append('<tr class="%s">' % self.LYRICS_CLASSES[self.mode])
+            html.append('<tr class="%s">' % self.get_lyrics_html_classes())
             for i in xrange(len(chords)):
-                html.append('<td class="%s">%s</td>' % (self.LYRICS_CLASSES[self.mode], lyrics[i],))
+                html.append('<td class="%s">%s</td>' % (self.get_lyrics_html_classes(), lyrics[i],))
             html.append('</tr>')
 
             # end table

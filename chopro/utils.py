@@ -1,1 +1,1 @@
-from .chopro2html import chopro2html
+from chopro.chopro2html import chopro2html
