@@ -1,5 +1,6 @@
 # pychopro
 [![PyPI version](https://badge.fury.io/py/chopro.svg)](https://badge.fury.io/py/chopro)
+[![Build Status](https://travis-ci.org/jontsai/pychopro.svg?branch=master)](https://travis-ci.org/jontsai/pychopro)
 
 Utilities for manipulating, converting, and rendering ChoPro/ChordPro text.
 
