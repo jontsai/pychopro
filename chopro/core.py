@@ -46,16 +46,14 @@ class ChoPro(object):
     REGEX_END_OF_TAB = re.compile(r'(?:end_of_tab|eot)', re.IGNORECASE)
     REGEX_LYRICS_CHORDS = re.compile(r'(.*?)\[(.*?)\]')
 
-    mode = 0 # mode defines which class to use
-
-    #mode =           0         1                2             3
-    #	              normal    chorus           normal+tab    chorus+tab
-    LYRICS_CLASSES = ('lyrics', 'lyrics-chorus', 'lyrics-tab', 'lyrics-chorus-tab',)
-    CHORDS_CLASSES = ('chords', 'chords-chorus', 'chords-tab', 'chords-chorus-tab',)
+    LYRICS_CLASS = 'lyrics'
+    CHORDS_CLASS = 'chords'
+    MODE_CHORUS = 'chorus'
+    MODE_TAB = 'tab'
 
     def __init__(self, chopro_text):
         self.chopro_lines = chopro_text.split('\n')
-        self.mode = 0
+        self.modes = set()
 
     def get_html(self):
         # build HTML
@@ -67,16 +65,12 @@ class ChoPro(object):
         return html_str
 
     def get_lyrics_html_classes(self):
-        classes = [self.LYRICS_CLASSES[0]]
-        if self.mode > 0:
-            classes.append(self.LYRICS_CLASSES[self.mode])
+        classes = [self.LYRICS_CLASS,] + list(self.modes)
         result = ' '.join(classes)
         return result
 
     def get_chords_html_classes(self):
-        classes = [self.CHORDS_CLASSES[0]]
-        if self.mode > 0:
-            classes.append(self.CHORDS_CLASSES[self.mode])
+        classes = [self.CHORDS_CLASS,] + list(self.modes)
         result = ' '.join(classes)
         return result
 
@@ -113,22 +107,22 @@ class ChoPro(object):
             subtitle = gre.last_match.group(1)
             html.append('<h2>%s</h2>' % subtitle)
         elif gre.match(self.REGEX_START_OF_CHORUS, command):
-	    self.mode |= 1
+	    self.modes.add(self.MODE_CHORUS)
         elif gre.match(self.REGEX_END_OF_CHORUS, command):
-            self.mode &= ~1
+            self.modes.remove(self.MODE_CHORUS)
         elif gre.match(self.REGEX_COMMENT, command):
             comment = gre.last_match.group(1)
             html.append('<p class="comment">%s</p>' % comment)
         elif gre.match(self.REGEX_COMMENT_ITALIC, command):
             comment = gre.last_match.group(1)
-            html.append('<p class="comment-italic">%s</p>' % comment)
+            html.append('<p class="comment comment-italic">%s</p>' % comment)
         elif gre.match(self.REGEX_COMMENT_BOX, command):
             comment = gre.last_match.group(1)
-            html.append('<p class="comment-box">%s</p>' % comment)
+            html.append('<p class="comment comment-box">%s</p>' % comment)
         elif gre.match(self.REGEX_START_OF_TAB, command):
-	    self.mode |= 2
+	    self.modes.add(self.MODE_TAB)
         elif gre.match(self.REGEX_END_OF_TAB, command):
-            self.mode &= ~2
+            self.modes.remove(self.MODE_TAB)
         else:
             html.append('<!-- Unsupported command: %s -->' % command)
 
