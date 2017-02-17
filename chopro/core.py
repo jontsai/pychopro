@@ -54,15 +54,29 @@ class ChoPro(object):
     def __init__(self, chopro_text):
         self.chopro_lines = chopro_text.split('\n')
         self.modes = set()
+        self.is_processed = False
 
-    def get_html(self):
-        # build HTML
+    def _process(self):
+        """Process the Chopro, extracting lyrics and building the HTML
+        """
         self.html = []
+        self.lyrics = []
         self.gre = Re()
         for line in self.chopro_lines:
             line = self._process_chopro_line(line)
+        self.is_processed = True
+
+    def get_html(self):
+        if not self.is_processed:
+            self._process()
         html_str = '\n'.join(self.html)
         return html_str
+
+    def get_lyrics(self):
+        if not self.is_processed:
+            self._process()
+        lyrics_str = re.sub('&nbsp;', ' ', '\n'.join(self.lyrics))
+        return lyrics_str
 
     def get_lyrics_html_classes(self):
         classes = [self.LYRICS_CLASS,] + list(self.modes)
@@ -143,6 +157,7 @@ class ChoPro(object):
                 break
         # add rest of line (after last chord) into lyrics
         lyrics.append(line)
+        self.lyrics.append(''.join(lyrics))
 
         if lyrics[0] == '':
             # line began with a chord
