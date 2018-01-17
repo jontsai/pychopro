@@ -51,24 +51,27 @@ class ChoPro(object):
     MODE_CHORUS = 'chorus'
     MODE_TAB = 'tab'
 
+    HTML_STYLES = ['div', 'table',]
+
     def __init__(self, chopro_text):
         self.chopro_lines = chopro_text.split('\n')
         self.modes = set()
         self.is_processed = False
 
-    def _process(self):
+    def _process(self, html_style):
         """Process the Chopro, extracting lyrics and building the HTML
         """
         self.html = []
         self.lyrics = []
         self.gre = Re()
         for line in self.chopro_lines:
-            line = self._process_chopro_line(line)
+            line = self._process_chopro_line(line, 'div')
         self.is_processed = True
 
-    def get_html(self):
+    def get_html(self, html_style=None):
+        html_style = html_style if html_style in ChoPro.HTML_STYLES else 'table'
         if not self.is_processed:
-            self._process()
+            self._process(html_style)
         html_str = '\n'.join(self.html)
         return html_str
 
@@ -94,7 +97,7 @@ class ChoPro(object):
         sanitized = re.sub(r'&', '&amp;', sanitized)
         return sanitized
 
-    def _process_chopro_line(self, chopro_line):
+    def _process_chopro_line(self, chopro_line, html_style):
         line = self._sanitize_chopro_line(chopro_line)
         gre, html = self.gre, self.html
 
@@ -104,7 +107,7 @@ class ChoPro(object):
             self._process_chopro_line_command()
         else:
             # this is a line with chords and lyrics
-            self._process_chopro_line_chords_lyrics(line)
+            self._process_chopro_line_chords_lyrics(line, html_style)
 
     def _process_chopro_line_comment(self):
         gre, html = self.gre, self.html
@@ -140,7 +143,7 @@ class ChoPro(object):
         else:
             html.append('<!-- Unsupported command: %s -->' % command)
 
-    def _process_chopro_line_chords_lyrics(self, line):
+    def _process_chopro_line_chords_lyrics(self, line, html_style):
         gre, html = self.gre, self.html
         # replace spaces with hard spaces
         line = re.sub('\s', '&nbsp;', line)
@@ -165,13 +168,7 @@ class ChoPro(object):
             chords = chords[1:]
             lyrics = lyrics[1:]
 
-        if len(lyrics) == 0:
-            # empty line
-            html.append('<br/>')
-        elif len(lyrics) == 1 and chords[0] == '':
-            # line without chords
-            html.append('<div class="%s">%s</div>' % (self.get_lyrics_html_classes(), lyrics[0],))
-        else:
+        def _generate_chords_lyrics_line_html_table():
             # line with lyrics and chords interleaved
             # start table
             html.append('<table cellpadding=0 cellspacing=0>')
@@ -190,3 +187,38 @@ class ChoPro(object):
 
             # end table
             html.append('</table>')
+
+        def _generate_chords_lyrics_line_html_div():
+            # line with lyrics and chords interleaved
+            # start table
+            html.append('<div class="chords-lyrics-line">')
+
+            for chord, lyric in zip(chords, lyrics):
+                data = {
+                    'chords_classes' : self.get_chords_html_classes(),
+                    'chord' : chord,
+                    'lyrics_classes' : self.get_lyrics_html_classes(),
+                    'lyric' : lyric,
+                }
+                html_fragment = """<div class="chord-lyric-block">
+  <div class="%(chords_classes)s">%(chord)s</div>
+  <div class="%(lyrics_classes)s">%(lyric)s</div>
+</div>
+""" % data
+                html.append(html_fragment)
+
+            html.append('</div>')
+
+        if len(lyrics) == 0:
+            # empty line
+            html.append('<br/>')
+        elif len(lyrics) == 1 and chords[0] == '':
+            # line without chords
+            html.append('<div class="%s">%s</div>' % (self.get_lyrics_html_classes(), lyrics[0],))
+        else:
+            if html_style == 'table':
+                _generate_chords_lyrics_line_html_table()
+            elif html_style == 'div':
+                _generate_chords_lyrics_line_html_div()
+            else:
+                pass
