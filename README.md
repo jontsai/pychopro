@@ -10,7 +10,7 @@ Utilities for manipulating, converting, and rendering ChoPro/ChordPro text.
 
 ## How It Works
 
-[ChoPro](https://en.wikipedia.org/wiki/Chord_(software)) aka [ChordPro](http://www.chordpro.org/) is a "[simple text format for the notation of lyrics and chords](http://www.chordii.org/chordpro/index.html)."
+[ChoPro](https://en.wikipedia.org/wiki/ChordPro) aka [ChordPro](http://www.chordpro.org/) is a "[simple text format for the notation of lyrics and chords](http://www.chordpro.org/chordpro/ChordPro-File-Format-Specification.html)."
 
 This project contains a script [`chopro2html`](https://github.com/jontsai/pychopro/blob/master/chopro/chopro2html.py) that can convert Chordpro files like [this](https://raw.githubusercontent.com/jontsai/pychopro/master/demo/twinkle_twinkle_little_star.chopro) into HTML files that look like [this](http://jontsai.github.io/pychopro/demo/twinkle.html).
 

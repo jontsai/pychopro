@@ -30,13 +30,81 @@ class Re(object):
             self.last_match = None
         return result
 
-class ChoPro(object):
-    title = 'ChordPro Song'
+CHOPRO_META_DIRECTIVES = [
+    'title',
+    'subtitle',
+    'artist',
+    'composer',
+    'lyricist',
+    'arranger',
+    'copyright',
+    'album',
+    'year',
+    'key',
+    'time',
+    'tempo',
+    'duration',
+    'capo',
+]
+class ChoProMeta(object):
+    DEFAULT_TITLE = 'ChordPro Song'
 
+    DIRECTIVES = CHOPRO_META_DIRECTIVES
+
+    COMMANDS_SUB_PATTERN = '|'.join(CHOPRO_META_DIRECTIVES)
+#    REGEX_TITLE = re.compile(r'^t(?:itle):(.*)', re.IGNORECASE)
+#    REGEX_SUBTITLE = re.compile(r'(?:subtitle|st):(.*)', re.IGNORECASE)
+#    REGEX_KEY = re.compile(r'(?:key):(.*)', re.IGNORECASE)
+
+    def __init__(self):
+        for directive in ChoProMeta.DIRECTIVES:
+            setattr(self, directive, None)
+
+    def process(self, command, args):
+        if command in ChoProMeta.DIRECTIVES:
+            setattr(self, command, args)
+
+    def get_html(self):
+        self.title = self.title if self.title else ChoProMeta.DEFAULT_TITLE
+
+        html = []
+        html.append('<div class="song-meta-section">')
+        html.append('<div class="song-title">')
+        html.append('<h1>%s</h1>' % self.title)
+        if self.subtitle:
+            html.append('<h2>%s</h2>' % self.subtitle)
+        html.append('</div>') # end .song-title
+
+        html.append('<div class="song-meta">')
+        if self.key:
+            html.append('<span class="key">Key - <span class="chords">%s</span></span><br/>' % self.key)
+
+        if self.capo:
+            html.append('<span class="capo">Capo %s</span><br/>' % self.capo)
+
+        if self.tempo:
+            html.append('<span class="tempo">Tempo - %s</span>' % self.tempo)
+            if self.time:
+                html.append('|')
+            else:
+                html.append('<br/>')
+
+        if self.time:
+            html.append('<span class="time">Time - %s</span><br/>' % self.time)
+
+        html.append('</div>') # end .song-meta
+        html.append('</div>') # end .song-meta-section
+
+        html_str = '\n'.join(html)
+        return html_str
+
+class ChoPro(object):
     REGEX_COMMENT_NON_PRINTING = re.compile(r'^#(.*)')
     REGEX_COMMAND = re.compile(r'{(.*)}')
-    REGEX_TITLE = re.compile(r'^t(?:itle):(.*)', re.IGNORECASE)
-    REGEX_SUBTITLE = re.compile(r'(?:subtitle|st):(.*)', re.IGNORECASE)
+    # meta-data directives
+    REGEX_META = re.compile(r'(?:meta:)?\w*(?P<command>%s):?\w*(?P<args>.*)' % ChoProMeta.COMMANDS_SUB_PATTERN, re.IGNORECASE)
+
+    # formatting directives
     REGEX_START_OF_CHORUS = re.compile(r'(?:start_of_chorus|soc)', re.IGNORECASE)
     REGEX_END_OF_CHORUS = re.compile(r'(?:end_of_chorus|eoc)', re.IGNORECASE)
     REGEX_COMMENT = re.compile(r'c(?:omment)?:(.*)', re.IGNORECASE)
@@ -44,6 +112,8 @@ class ChoPro(object):
     REGEX_COMMENT_BOX = re.compile(r'(?:comment_box|cb):(.*)', re.IGNORECASE)
     REGEX_START_OF_TAB = re.compile(r'(?:start_of_tab|sot)', re.IGNORECASE)
     REGEX_END_OF_TAB = re.compile(r'(?:end_of_tab|eot)', re.IGNORECASE)
+
+    # regular chopro line
     REGEX_LYRICS_CHORDS = re.compile(r'(.*?)\[(.*?)\]')
 
     LYRICS_CLASS = 'lyrics'
@@ -61,7 +131,8 @@ class ChoPro(object):
     def _process(self, html_style):
         """Process the Chopro, extracting lyrics and building the HTML
         """
-        self.html = []
+        self.meta = ChoProMeta()
+        self.body_html = []
         self.lyrics = []
         self.gre = Re()
         for line in self.chopro_lines:
@@ -72,7 +143,10 @@ class ChoPro(object):
         html_style = html_style if html_style in ChoPro.HTML_STYLES else 'table'
         if not self.is_processed:
             self._process(html_style)
-        html_str = '\n'.join(self.html)
+        html_str = '%s%s' % (
+            self.meta.get_html(),
+            '\n'.join(self.body_html),
+        )
         return html_str
 
     def get_lyrics(self):
@@ -82,12 +156,12 @@ class ChoPro(object):
         return lyrics_str
 
     def get_lyrics_html_classes(self):
-        classes = [self.LYRICS_CLASS,] + list(self.modes)
+        classes = [ChoPro.LYRICS_CLASS,] + list(self.modes)
         result = ' '.join(classes)
         return result
 
     def get_chords_html_classes(self):
-        classes = [self.CHORDS_CLASS,] + list(self.modes)
+        classes = [ChoPro.CHORDS_CLASS,] + list(self.modes)
         result = ' '.join(classes)
         return result
 
@@ -95,63 +169,64 @@ class ChoPro(object):
         sanitized = re.sub(r'<', '&lt;', chopro_line)
         sanitized = re.sub(r'>', '&gt;', sanitized)
         sanitized = re.sub(r'&', '&amp;', sanitized)
+        sanitized = sanitized.rstrip()
         return sanitized
 
     def _process_chopro_line(self, chopro_line, html_style):
         line = self._sanitize_chopro_line(chopro_line)
-        gre, html = self.gre, self.html
+        gre, html = self.gre, self.body_html
 
-        if gre.match(self.REGEX_COMMENT_NON_PRINTING, line):
+        if gre.match(ChoPro.REGEX_COMMENT_NON_PRINTING, line):
             self._process_chopro_line_comment()
-        elif gre.match(self.REGEX_COMMAND, line):
+        elif gre.match(ChoPro.REGEX_COMMAND, line):
             self._process_chopro_line_command()
         else:
             # this is a line with chords and lyrics
             self._process_chopro_line_chords_lyrics(line, html_style)
 
     def _process_chopro_line_comment(self):
-        gre, html = self.gre, self.html
+        gre, html = self.gre, self.body_html
         comment = gre.last_match.group(1)
         html.append('<!-- %s -->"' % comment)
 
     def _process_chopro_line_command(self):
-        gre, html = self.gre, self.html
+        gre, html = self.gre, self.body_html
         command = gre.last_match.group(1)
-        if gre.match(self.REGEX_TITLE, command):
-            title = gre.last_match.group(1)
-            html.append('<h1>%s</h1>' % title)
-        elif gre.match(self.REGEX_SUBTITLE, command):
-            subtitle = gre.last_match.group(1)
-            html.append('<h2>%s</h2>' % subtitle)
-        elif gre.match(self.REGEX_START_OF_CHORUS, command):
-	    self.modes.add(self.MODE_CHORUS)
-        elif gre.match(self.REGEX_END_OF_CHORUS, command):
-            self.modes.remove(self.MODE_CHORUS)
-        elif gre.match(self.REGEX_COMMENT, command):
-            comment = gre.last_match.group(1)
+        # meta directives
+        if gre.match(ChoPro.REGEX_META, command):
+            meta_command = gre.last_match.group('command').lower()
+            meta_args = gre.last_match.group('args')
+            self.meta.process(meta_command, meta_args.strip())
+        # formatting directives
+        elif gre.match(ChoPro.REGEX_START_OF_CHORUS, command):
+	    self.modes.add(ChoPro.MODE_CHORUS)
+        elif gre.match(ChoPro.REGEX_END_OF_CHORUS, command):
+            self.modes.remove(ChoPro.MODE_CHORUS)
+        elif gre.match(ChoPro.REGEX_COMMENT, command):
+            comment = gre.last_match.group(1).strip()
             html.append('<p class="comment">%s</p>' % comment)
-        elif gre.match(self.REGEX_COMMENT_ITALIC, command):
-            comment = gre.last_match.group(1)
+        elif gre.match(ChoPro.REGEX_COMMENT_ITALIC, command):
+            comment = gre.last_match.group(1).strip()
             html.append('<p class="comment comment-italic">%s</p>' % comment)
-        elif gre.match(self.REGEX_COMMENT_BOX, command):
-            comment = gre.last_match.group(1)
+        elif gre.match(ChoPro.REGEX_COMMENT_BOX, command):
+            comment = gre.last_match.group(1).strip()
             html.append('<p class="comment comment-box">%s</p>' % comment)
-        elif gre.match(self.REGEX_START_OF_TAB, command):
-	    self.modes.add(self.MODE_TAB)
-        elif gre.match(self.REGEX_END_OF_TAB, command):
-            self.modes.remove(self.MODE_TAB)
+        elif gre.match(ChoPro.REGEX_START_OF_TAB, command):
+	    self.modes.add(ChoPro.MODE_TAB)
+        elif gre.match(ChoPro.REGEX_END_OF_TAB, command):
+            self.modes.remove(ChoPro.MODE_TAB)
         else:
             html.append('<!-- Unsupported command: %s -->' % command)
 
     def _process_chopro_line_chords_lyrics(self, line, html_style):
-        gre, html = self.gre, self.html
+        gre, html = self.gre, self.body_html
         # replace spaces with hard spaces
         line = re.sub('\s', '&nbsp;', line)
 
         chords = ['',]
         lyrics = []
         while True:
-            line = gre.sub(self.REGEX_LYRICS_CHORDS, '', line, count=1)
+            line = gre.sub(ChoPro.REGEX_LYRICS_CHORDS, '', line, count=1)
             if gre.last_match:
                 l, c = gre.last_match.group(1), gre.last_match.group(2)
                 lyrics.append(l)
@@ -203,8 +278,7 @@ class ChoPro(object):
                 html_fragment = """<div class="chord-lyric-block">
   <div class="%(chords_classes)s">%(chord)s</div>
   <div class="%(lyrics_classes)s">%(lyric)s</div>
-</div>
-""" % data
+</div>""" % data
                 html.append(html_fragment)
 
             html.append('</div>')
