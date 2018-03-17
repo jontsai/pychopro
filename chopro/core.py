@@ -102,7 +102,7 @@ class ChoPro(object):
     REGEX_COMMENT_NON_PRINTING = re.compile(r'^#(.*)')
     REGEX_COMMAND = re.compile(r'{(.*)}')
     # meta-data directives
-    REGEX_META = re.compile(r'(?:meta:)?\w*(?P<command>%s):?\w*(?P<args>.*)' % ChoProMeta.COMMANDS_SUB_PATTERN, re.IGNORECASE)
+    REGEX_META = re.compile(r'(?:meta:)?\s*(?P<command>%s):?\s*(?P<args>.*)' % ChoProMeta.COMMANDS_SUB_PATTERN, re.IGNORECASE)
 
     # formatting directives
     REGEX_START_OF_CHORUS = re.compile(r'(?:start_of_chorus|soc)', re.IGNORECASE)
