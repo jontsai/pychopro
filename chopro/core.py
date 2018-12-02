@@ -68,13 +68,14 @@ class ChoProMeta(object):
         self.title = self.title if self.title else ChoProMeta.DEFAULT_TITLE
 
         html = []
-        html.append('<div class="song-meta-section">')
+        html.append('<div class="song-heading-section">')
         html.append('<div class="song-title">')
         html.append('<h1>%s</h1>' % self.title)
         if self.subtitle:
             html.append('<h2>%s</h2>' % self.subtitle)
         html.append('</div>') # end .song-title
 
+        html.append('<div class="song-meta-container">')
         html.append('<div class="song-meta">')
         if self.key:
             html.append('<span class="key">Key - <span class="chords">%s</span></span><br/>' % self.key)
@@ -93,7 +94,8 @@ class ChoProMeta(object):
             html.append('<span class="time">Time - %s</span><br/>' % self.time)
 
         html.append('</div>') # end .song-meta
-        html.append('</div>') # end .song-meta-section
+        html.append('</div>') # end .song-meta-container
+        html.append('</div>') # end .song-heading-section
 
         html_str = '\n'.join(html)
         return html_str
@@ -139,12 +141,12 @@ class ChoPro(object):
             line = self._process_chopro_line(line, 'div')
         self.is_processed = True
 
-    def get_html(self, html_style=None):
+    def get_html(self, html_style=None, include_meta=True):
         html_style = html_style if html_style in ChoPro.HTML_STYLES else 'table'
         if not self.is_processed:
             self._process(html_style)
         html_str = '%s%s' % (
-            self.meta.get_html(),
+            self.meta.get_html() if include_meta else '',
             '\n'.join(self.body_html),
         )
         return html_str
