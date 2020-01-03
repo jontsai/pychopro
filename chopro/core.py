@@ -201,7 +201,7 @@ class ChoPro(object):
             self.meta.process(meta_command, meta_args.strip())
         # formatting directives
         elif gre.match(ChoPro.REGEX_START_OF_CHORUS, command):
-	    self.modes.add(ChoPro.MODE_CHORUS)
+            self.modes.add(ChoPro.MODE_CHORUS)
         elif gre.match(ChoPro.REGEX_END_OF_CHORUS, command):
             self.modes.remove(ChoPro.MODE_CHORUS)
         elif gre.match(ChoPro.REGEX_COMMENT, command):
@@ -214,7 +214,7 @@ class ChoPro(object):
             comment = gre.last_match.group(1).strip()
             html.append('<p class="comment comment-box">%s</p>' % comment)
         elif gre.match(ChoPro.REGEX_START_OF_TAB, command):
-	    self.modes.add(ChoPro.MODE_TAB)
+            self.modes.add(ChoPro.MODE_TAB)
         elif gre.match(ChoPro.REGEX_END_OF_TAB, command):
             self.modes.remove(ChoPro.MODE_TAB)
         else:
